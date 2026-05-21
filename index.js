@@ -29,10 +29,17 @@ async function run() {
     
     const db=client.db('Play4g')
     const Collections=db.collection('Facilities')
+    const BookingCollections=db.collection('Bookings')
 
     app.get("/facilities",async(req,res)=>{
         const result=await Collections.find().toArray()
         res.send(result)
+    })
+    app.post("/bookings",async(req,res)=>{
+        const booking=req.body;
+        const result= await BookingCollections.insertOne(booking)
+        res.send(result)
+
     })
     app.get('/facilityDetails/:id',async(req,res)=>{
         const {id}= req.params
