@@ -39,7 +39,10 @@ async function run() {
         const booking=req.body;
         const result= await BookingCollections.insertOne(booking)
         res.send(result)
-
+    })
+    app.get('/bookings',async(req,res)=>{
+        const result=await BookingCollections.find().toArray()
+        res.send(result)
     })
     app.get('/facilityDetails/:id',async(req,res)=>{
         const {id}= req.params
