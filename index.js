@@ -3,7 +3,7 @@
 
 
 
-const express=require('express');
+const express=require('express'); 
 const app=express();
 const port=5000
 const cors=require('cors')
@@ -31,10 +31,32 @@ async function run() {
     const Collections=db.collection('Facilities')
     const BookingCollections=db.collection('Bookings')
 
-    app.get("/facilities",async(req,res)=>{
-        const result=await Collections.find().toArray()
-        res.send(result)
-    })
+app.get("/facilities", async (req, res) => {
+
+  const search = req.query.search || "";
+  const sportType = req.query.sportType || "";
+
+  let query = {};
+
+  // SEARCH BY FACILITY NAME
+  if (search) {
+    query.facility_name = {
+      $regex: search,
+      $options: "i"
+    };
+  }
+
+  // FILTER BY SPORT TYPE
+  if (sportType) {
+    query.facility_type = {
+      $in: [sportType]
+    };
+  }
+
+  const result = await Collections.find(query).toArray();
+
+  res.send(result);
+})
    app.patch("/facilityDetails/:id", async (req, res) => {
 
   const { id } = req.params;
@@ -71,10 +93,31 @@ async function run() {
         const result= await BookingCollections.deleteOne({_id: new ObjectId(id)})
         res.send(result)
     })
-    app.get('/bookings',async(req,res)=>{
-        const result=await BookingCollections.find().toArray()
-        res.send(result)
-    })
+app.get(
+  '/bookings',
+
+  async (req, res, next) => {
+
+    const header = req.headers.authorization;
+
+    console.log(header);
+
+    if (!header) {
+      return res.status(401).json({
+        message: "Unauthorized Access"
+      });
+    }
+
+    next();
+  },
+
+  async (req, res) => {
+
+    const result = await BookingCollections.find().toArray();
+
+    res.send(result);
+  }
+)
     app.get('/facilityDetails/:id',async(req,res)=>{
         const {id}= req.params
        const result = await Collections.findOne({ _id: new ObjectId(id), });
