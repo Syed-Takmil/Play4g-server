@@ -39,9 +39,7 @@ async function run() {
 
   const { id } = req.params;
   const UpdatedData = req.body;
-
   delete UpdatedData._id;
-
   const result = await Collections.updateOne(
     { _id: new ObjectId(id) },
     {
@@ -51,9 +49,26 @@ async function run() {
 
   res.send(result);
 });
+
+  app.delete("/facilityDetails/:id", async (req, res) => {
+
+  const { id } = req.params;
+  const result = await Collections.deleteOne(
+    { _id: new ObjectId(id) }
+  );
+
+  res.send(result);
+});
+
+
     app.post("/bookings",async(req,res)=>{
         const booking=req.body;
         const result= await BookingCollections.insertOne(booking)
+        res.send(result)
+    })
+    app.delete("/bookings/:id",async(req,res)=>{
+        const {id} = req.params
+        const result= await BookingCollections.deleteOne({_id: new ObjectId(id)})
         res.send(result)
     })
     app.get('/bookings',async(req,res)=>{
