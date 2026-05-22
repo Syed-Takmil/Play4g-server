@@ -35,6 +35,22 @@ async function run() {
         const result=await Collections.find().toArray()
         res.send(result)
     })
+   app.patch("/facilityDetails/:id", async (req, res) => {
+
+  const { id } = req.params;
+  const UpdatedData = req.body;
+
+  delete UpdatedData._id;
+
+  const result = await Collections.updateOne(
+    { _id: new ObjectId(id) },
+    {
+      $set: UpdatedData
+    }
+  );
+
+  res.send(result);
+});
     app.post("/bookings",async(req,res)=>{
         const booking=req.body;
         const result= await BookingCollections.insertOne(booking)
