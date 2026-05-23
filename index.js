@@ -8,7 +8,6 @@ dotenv.config();
 
 const port = process.env.PORT || 5000;
 
-// FIX CORS: Added flexible headers and options processing
 app.use(
   cors()
 );
@@ -52,8 +51,6 @@ const verifyToken = async (req, res, next) => {
     return res.status(403).json({ message: "Forbidden" });
   }
 };
-
-// Global DB variables for caching connection in serverless deployment
 let db;
 let Collections;
 let BookingCollections;
@@ -68,7 +65,6 @@ async function getDB() {
   return { Collections, BookingCollections };
 }
 
-// Middleware to inject collections on every request safely
 app.use(async (req, res, next) => {
   try {
     const collections = await getDB();
@@ -80,7 +76,6 @@ app.use(async (req, res, next) => {
   }
 });
 
-/* --- ALL ROUTES --- */
 
 app.get("/facilities", async (req, res) => {
   const { Collections } = req.collections;
@@ -174,7 +169,7 @@ app.get("/", (req, res) => {
   res.send("Play4G Server Running");
 });
 
-// LOCAL ONLY RUNNER
+
 if (process.env.NODE_ENV !== "production") {
   app.listen(port, () => {
     console.log(`Server running on port ${port}`);
