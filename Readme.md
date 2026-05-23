@@ -22,7 +22,7 @@ https://play4g-server.vercel.app
 
 ##  API Features
 
-### 🏟 Facilities
+###  Facilities
 - GET /facilities
 - GET /facilityDetails/:id
 - POST /facilities (protected)
