@@ -29,7 +29,7 @@ const {
 const {
   createRemoteJWKSet,
   jwtVerify,
-} = require("jose-cjs");
+} = require("jose");
 
 const uri = process.env.MONGODB_URI;
 
