@@ -1,5 +1,3 @@
-
-
 const express = require("express");
 const app = express();
 const cors = require("cors");
@@ -8,15 +6,11 @@ dotenv.config();
 
 const port = process.env.PORT || 5000;
 
-app.use(
-  cors()
-);
-
+app.use(cors());
 app.use(express.json());
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const { createRemoteJWKSet, jwtVerify } = require("jose-cjs");
-
 
 const uri = process.env.MONGODB_URI;
 const client = new MongoClient(uri, {
@@ -31,8 +25,6 @@ const JWKS = createRemoteJWKSet(
   new URL("https://assignment-09-play4g.vercel.app/api/auth/jwks")
 );
 
-
-// VERIFY TOKEN MIDDLEWARE
 const verifyToken = async (req, res, next) => {
   const authHeader = req?.headers.authorization;
   if (!authHeader) {
@@ -45,8 +37,7 @@ const verifyToken = async (req, res, next) => {
 
   try {
     const { payload } = await jwtVerify(token, JWKS);
-    // console.log(payload);
-     req.user = {
+    req.user = {
       email: payload.email,
       id: payload.sub,
     };
@@ -55,6 +46,7 @@ const verifyToken = async (req, res, next) => {
     return res.status(403).json({ message: "Forbidden" });
   }
 };
+
 let db;
 let Collections;
 let BookingCollections;
@@ -98,7 +90,18 @@ app.get("/facilities", async (req, res) => {
   res.send(result);
 });
 
-app.get("/facilityDetails/:id", verifyToken,async (req, res) => {
+app.get("/facilities/user", verifyToken, async (req, res) => {
+  const { Collections } = req.collections;
+  try {
+    const query = { owner_email: req.user.email };
+    const result = await Collections.find(query).toArray();
+    res.send(result);
+  } catch (err) {
+    res.status(500).send({ error: "Failed to loaD" });
+  }
+});
+
+app.get("/facilityDetails/:id", verifyToken, async (req, res) => {
   const { Collections } = req.collections;
   const { id } = req.params;
   try {
@@ -109,14 +112,13 @@ app.get("/facilityDetails/:id", verifyToken,async (req, res) => {
   }
 });
 
-app.post("/facilities",verifyToken, async (req, res) => {
+app.post("/facilities", verifyToken, async (req, res) => {
   const { Collections } = req.collections;
   const Facility = req.body;
   console.log(Facility)
   const result = await Collections.insertOne(Facility);
   res.send(result);
 });
-
 app.patch("/facilityDetails/:id", verifyToken, async (req, res) => {
   const { Collections } = req.collections;
   const { id } = req.params;
@@ -133,10 +135,6 @@ app.patch("/facilityDetails/:id", verifyToken, async (req, res) => {
       return res.status(404).send({ error: "Facility not found" });
     }
 
-    if (facility.owner_email !== req.user.email) {
-      return res.status(403).send({ error: "Forbidden: Not owner" });
-    }
-
     const result = await Collections.updateOne(
       { _id: new ObjectId(id) },
       { $set: UpdatedData }
@@ -144,7 +142,7 @@ app.patch("/facilityDetails/:id", verifyToken, async (req, res) => {
 
     res.send(result);
   } catch (err) {
-    res.status(400).send({ error: "Invalid Object ID structure" });
+    res.status(400).send({ error: "Invalid" });
   }
 });
 
@@ -161,10 +159,6 @@ app.delete("/facilityDetails/:id", verifyToken, async (req, res) => {
       return res.status(404).send({ error: "Facility not found" });
     }
 
-    if (facility.owner_email !== req.user.email) {
-      return res.status(403).send({ error: "Forbidden: Not owner" });
-    }
-
     const result = await Collections.deleteOne({
       _id: new ObjectId(id),
     });
@@ -175,14 +169,14 @@ app.delete("/facilityDetails/:id", verifyToken, async (req, res) => {
   }
 });
 
-app.post("/bookings",verifyToken,  async (req, res) => {
+app.post("/bookings", verifyToken, async (req, res) => {
   const { BookingCollections } = req.collections;
   const booking = req.body;
   const result = await BookingCollections.insertOne(booking);
   res.send(result);
 });
 
-app.get("/bookings",verifyToken,  async (req, res) => {
+app.get("/bookings", verifyToken, async (req, res) => {
   const { BookingCollections } = req.collections;
   const result = await BookingCollections.find().toArray();
   res.send(result);
@@ -195,14 +189,13 @@ app.delete("/bookings/:id", async (req, res) => {
     const result = await BookingCollections.deleteOne({ _id: new ObjectId(id) });
     res.send(result);
   } catch (err) {
-    res.status(400).send({ error: "Invalid Object ID structure" });
+    res.status(400).send({ error: "Invalid " });
   }
 });
 
 app.get("/", (req, res) => {
   res.send("Play4G Server Running");
 });
-
 
 if (process.env.NODE_ENV !== "production") {
   app.listen(port, () => {
