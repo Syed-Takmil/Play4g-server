@@ -45,7 +45,11 @@ const verifyToken = async (req, res, next) => {
 
   try {
     const { payload } = await jwtVerify(token, JWKS);
-    console.log(payload);
+    // console.log(payload);
+     req.user = {
+      email: payload.email,
+      id: payload.sub,
+    };
     next();
   } catch (error) {
     return res.status(403).json({ message: "Forbidden" });
@@ -113,28 +117,58 @@ app.post("/facilities",verifyToken, async (req, res) => {
   res.send(result);
 });
 
-app.patch("/facilityDetails/:id",verifyToken, async (req, res) => {
+app.patch("/facilityDetails/:id", verifyToken, async (req, res) => {
   const { Collections } = req.collections;
   const { id } = req.params;
   const UpdatedData = req.body;
+
   delete UpdatedData._id;
 
   try {
+    const facility = await Collections.findOne({
+      _id: new ObjectId(id),
+    });
+
+    if (!facility) {
+      return res.status(404).send({ error: "Facility not found" });
+    }
+
+    if (facility.owner_email !== req.user.email) {
+      return res.status(403).send({ error: "Forbidden: Not owner" });
+    }
+
     const result = await Collections.updateOne(
       { _id: new ObjectId(id) },
       { $set: UpdatedData }
     );
+
     res.send(result);
   } catch (err) {
     res.status(400).send({ error: "Invalid Object ID structure" });
   }
 });
 
-app.delete("/facilityDetails/:id",verifyToken, async (req, res) => {
+app.delete("/facilityDetails/:id", verifyToken, async (req, res) => {
   const { Collections } = req.collections;
   const { id } = req.params;
+
   try {
-    const result = await Collections.deleteOne({ _id: new ObjectId(id) });
+    const facility = await Collections.findOne({
+      _id: new ObjectId(id),
+    });
+
+    if (!facility) {
+      return res.status(404).send({ error: "Facility not found" });
+    }
+
+    if (facility.owner_email !== req.user.email) {
+      return res.status(403).send({ error: "Forbidden: Not owner" });
+    }
+
+    const result = await Collections.deleteOne({
+      _id: new ObjectId(id),
+    });
+
     res.send(result);
   } catch (err) {
     res.status(400).send({ error: "Invalid Object ID structure" });
